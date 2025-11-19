@@ -318,11 +318,11 @@ class ThreadRollDetectorV2:
         """Map HSV values to predefined color labels - optimized for yellow thread rolls."""
         h, s, v = hsv
 
-        # PRIORITY 1: Yellow detection (MOST IMPORTANT - catches all yellow rolls)
-        # Yellow thread rolls: H=18-35, any reasonable brightness
-        # Analysis shows: H=20-32, S=33-209, V=92-181 for yellow rolls
-        # Very aggressive to catch ALL yellow (even low saturation ones)
-        if 18 <= h <= 35 and s >= 25 and v >= 85:
+        # PRIORITY 1: Yellow detection (ULTRA AGGRESSIVE - catches all 100+ yellow rolls)
+        # Yellow thread rolls: H=10-45 (very wide range for all yellow variations)
+        # Many yellow rolls have VERY low brightness/saturation due to shadows/lighting
+        # Analysis shows: H=10-45, S=9+, V=25+ for yellow rolls
+        if 10 <= h <= 45 and s >= 10 and v >= 25:
             return "yellow"
         
         # Also catch camera-affected bright yellow (high H due to white balance)

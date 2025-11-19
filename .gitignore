@@ -1,12 +1,12 @@
-# Python
+                                                                                                                                                                                                                                        # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 venv/
-env/
-ENV/
+env/                                                                                                                                                                                                                                                                                                                                                                                
+ENV/                                        
 *.egg-info/
 dist/
 build/
