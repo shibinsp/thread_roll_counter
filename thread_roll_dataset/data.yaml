@@ -1,0 +1,8 @@
+# Thread Roll Dataset
+path: /home/shibin/Desktop/object counting/thread_roll_dataset
+train: train/images
+val: val/images
+
+# Classes
+nc: 1  # number of classes
+names: ['thread_roll']  # class names
