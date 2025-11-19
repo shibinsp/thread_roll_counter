@@ -318,23 +318,23 @@ class ThreadRollDetectorV2:
         """Map HSV values to predefined color labels - optimized for yellow thread rolls."""
         h, s, v = hsv
 
-        # PRIORITY 1: Yellow detection (ULTRA AGGRESSIVE - catches all 100+ yellow rolls)
-        # Yellow thread rolls: H=10-45 (very wide range for all yellow variations)
-        # Many yellow rolls have VERY low brightness/saturation due to shadows/lighting
-        # Analysis shows: H=10-45, S=9+, V=25+ for yellow rolls
-        if 10 <= h <= 45 and s >= 10 and v >= 25:
+        # PRIORITY 1: Orange/Brown detection (MUST CHECK FIRST before yellow)
+        # Orange/brown thread rolls: H=8-25 (catches all orange/brown variations)
+        # Analysis shows: H=14-25, S=49-138, V=67-124 for orange/brown rolls
+        # Check orange/brown BEFORE yellow to prevent misclassification
+        if 8 <= h <= 25 and s >= 45 and v >= 65:
+            return "orange_brown"
+        
+        # PRIORITY 2: Yellow detection (TRUE yellow range, not orange)
+        # Yellow thread rolls: H=26-35 (true yellow, after orange range)
+        # Many yellow rolls have low brightness/saturation due to shadows/lighting
+        # Analysis shows: H=26-35, S=10+, V=25+ for yellow rolls
+        if 26 <= h <= 35 and s >= 10 and v >= 25:
             return "yellow"
         
         # Also catch camera-affected bright yellow (high H due to white balance)
         if 170 <= h <= 180 and v >= 170 and s >= 70:
             return "yellow"
-        
-        # PRIORITY 2: Orange/Brown detection (DISABLED for yellow-only images)
-        # Note: If you have orange/brown rolls, re-enable this with strict thresholds:
-        # if 10 <= h <= 17 and s >= 60 and 85 <= v < 115:
-        #     return "orange_brown"
-        # For now, disabled to prevent false positives on yellow rolls
-        pass
         
         # PRIORITY 3: White (low saturation, high brightness)
         if s <= 50 and v >= 180:
