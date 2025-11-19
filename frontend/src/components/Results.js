@@ -66,6 +66,7 @@ const Results = ({ result }) => {
       pink: '#ff69b4',
       yellow: '#ffd700',
       orange: '#ff8c00',
+      orange_brown: '#d2691e',  // Chocolate/brown color
       white: '#000000',
       other: '#808080',
     };

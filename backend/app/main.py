@@ -50,7 +50,7 @@ def get_detector():
                 status_code=500,
                 detail=f"Model file not found at {MODEL_PATH}. Please place your YOLO model weights there."
             )
-        detector = ThreadRollDetectorV2(MODEL_PATH, confidence_threshold=0.05)
+        detector = ThreadRollDetectorV2(MODEL_PATH, confidence_threshold=0.5)
     return detector
 
 

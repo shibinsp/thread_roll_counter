@@ -6,12 +6,13 @@ from PIL import Image
 import os
 from typing import List, Dict, Tuple
 
-# Optimized color ranges based on actual thread roll analysis
+# Optimized color ranges for orange/brown thread rolls
 COLOR_RANGES = {
-    "pink": [(140, 50, 130), (180, 255, 255)],  # Updated: H goes to 180, higher V threshold
-    "yellow": [(20, 100, 100), (35, 255, 255)],
-    "orange": [(5, 100, 100), (20, 255, 255)],
-    "white": [(0, 0, 180), (180, 40, 255)],
+    "orange_brown": [(8, 40, 80), (25, 200, 255)],  # Orange/brown thread rolls
+    "pink": [(140, 50, 130), (180, 255, 255)],       # Pink (restricted)
+    "yellow": [(26, 100, 150), (35, 255, 255)],      # Bright yellow
+    "white": [(0, 0, 180), (180, 50, 255)],          # White/light colored
+    "orange": [(5, 100, 100), (20, 255, 255)],       # Fallback orange
 }
 
 
@@ -314,39 +315,49 @@ class ThreadRollDetectorV2:
         return color_label
 
     def _map_hsv_to_label(self, hsv: np.ndarray) -> str:
-        """Map HSV values to predefined color labels with pink wraparound handling."""
+        """Map HSV values to predefined color labels - optimized for yellow thread rolls."""
         h, s, v = hsv
 
-        # PINK detection (expanded to catch all 109 pink rolls)
-        # Pink/red wraps around HSV: can be at H=165-180 OR H=0-15
-        # Based on analysis: pink rolls have H=0-179, S=66-150, V=94-220
+        # PRIORITY 1: Yellow detection (MOST IMPORTANT - catches all yellow rolls)
+        # Yellow thread rolls: H=18-35, any reasonable brightness
+        # Analysis shows: H=20-32, S=33-209, V=92-181 for yellow rolls
+        # Very aggressive to catch ALL yellow (even low saturation ones)
+        if 18 <= h <= 35 and s >= 25 and v >= 85:
+            return "yellow"
         
-        # High saturation and reasonable brightness = pink thread roll
-        if s >= 60 and v >= 85:
-            # Pink/red wraparound range (most pink rolls)
-            if (165 <= h <= 180) or (0 <= h <= 15):
+        # Also catch camera-affected bright yellow (high H due to white balance)
+        if 170 <= h <= 180 and v >= 170 and s >= 70:
+            return "yellow"
+        
+        # PRIORITY 2: Orange/Brown detection (DISABLED for yellow-only images)
+        # Note: If you have orange/brown rolls, re-enable this with strict thresholds:
+        # if 10 <= h <= 17 and s >= 60 and 85 <= v < 115:
+        #     return "orange_brown"
+        # For now, disabled to prevent false positives on yellow rolls
+        pass
+        
+        # PRIORITY 3: White (low saturation, high brightness)
+        if s <= 50 and v >= 180:
+            return "white"
+        
+        # PRIORITY 4: Pink detection (true pink, not yellow)
+        # Exclude bright colors that could be yellow
+        if s >= 60 and v >= 85 and v < 170:
+            # Pink/red wraparound range (but not catching yellow)
+            if (165 <= h <= 180) or (0 <= h <= 7):
                 return "pink"
             # Main pink/magenta range
             if 140 <= h < 165 and v >= 115:
                 return "pink"
         
-        # Lower saturation but still in pink range
-        if s >= 45 and v >= 110:
+        # Lower saturation pink (darker pink shades)
+        if s >= 45 and v >= 110 and v < 170:
             if 140 <= h <= 180:
                 return "pink"
 
-        # Check yellow and white (specific colors that shouldn't be pink)
-        # Yellow: bright and yellow-hued
-        if 25 <= h <= 35 and s >= 100 and v >= 150:
-            return "yellow"
-        
-        # White: low saturation, high brightness
-        if s <= 40 and v >= 180:
-            return "white"
-
-        # Check other colors
+        # Check remaining colors from COLOR_RANGES
         for color_name, (lower, upper) in COLOR_RANGES.items():
-            if color_name in ["pink", "yellow", "white"]:  # Already handled
+            if color_name in ["pink", "yellow", "white", "orange_brown"]:  # Already handled
                 continue
                 
             lower = np.array(lower)
