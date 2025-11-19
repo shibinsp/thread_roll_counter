@@ -318,23 +318,28 @@ class ThreadRollDetectorV2:
         """Map HSV values to predefined color labels - optimized for yellow thread rolls."""
         h, s, v = hsv
 
-        # PRIORITY 1: Orange/Brown detection (MUST CHECK FIRST before yellow)
-        # Orange/brown thread rolls: H=8-25 (catches all orange/brown variations)
-        # Analysis shows: H=14-25, S=49-138, V=67-124 for orange/brown rolls
-        # Check orange/brown BEFORE yellow to prevent misclassification
-        if 8 <= h <= 25 and s >= 45 and v >= 65:
-            return "orange_brown"
+        # PRIORITY 1: Yellow detection (CHECK FIRST for bright rolls)
+        # Yellow thread rolls: H=17-35 (includes bright yellow that looks orange-ish)
+        # Key insight: Bright rolls (V>=105) in H=17-25 are YELLOW, not orange/brown
+        # Analysis shows: Yellow rolls have H=17-25, V=75-157 (bright!)
         
-        # PRIORITY 2: Yellow detection (TRUE yellow range, not orange)
-        # Yellow thread rolls: H=26-35 (true yellow, after orange range)
-        # Many yellow rolls have low brightness/saturation due to shadows/lighting
-        # Analysis shows: H=26-35, S=10+, V=25+ for yellow rolls
+        # Bright yellow in H=17-25 range (catches yellow that looks orange-ish)
+        if 17 <= h <= 25 and s >= 10 and v >= 105:
+            return "yellow"
+        
+        # Standard yellow range H=26-35
         if 26 <= h <= 35 and s >= 10 and v >= 25:
             return "yellow"
         
         # Also catch camera-affected bright yellow (high H due to white balance)
         if 170 <= h <= 180 and v >= 170 and s >= 70:
             return "yellow"
+        
+        # PRIORITY 2: Orange/Brown detection (darker rolls, checked after yellow)
+        # Orange/brown thread rolls: H=8-25, but DARKER than yellow (V<105)
+        # Analysis shows: Orange/brown has H=8-25, V=60-105 (darker than bright yellow)
+        if 8 <= h <= 25 and s >= 45 and 60 <= v < 105:
+            return "orange_brown"
         
         # PRIORITY 3: White (low saturation, high brightness)
         if s <= 50 and v >= 180:
